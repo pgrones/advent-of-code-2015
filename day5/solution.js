@@ -42,7 +42,6 @@ for (const string of strings) {
 
     if (window[0] === window[2]) {
       niceStrings++;
-      console.log(string);
       break;
     }
   }
