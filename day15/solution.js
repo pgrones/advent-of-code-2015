@@ -40,21 +40,24 @@ console.log(highScore);
 
 highScore = 0;
 
-for (let i = 100; i > 0; i--) {
+for (let i = 100; i >= 0; i--) {
   const firstScore = ingredients[0].slice(0, -1).map((x) => x * i);
-  let calories = ingredients[0][ingredients[0].length - 1] * i;
+  const firstCalories = ingredients[0][ingredients[0].length - 1] * i;
 
-  for (let j = 100 - i; j > 0; j--) {
+  for (let j = 100; j >= 0; j--) {
     const secondScore = ingredients[1].slice(0, -1).map((x) => x * j);
-    calories += ingredients[1][ingredients[1].length - 1] * j;
+    const secondCalories = ingredients[1][ingredients[1].length - 1] * j;
 
-    for (let k = 100 - i - j; k > 0; k--) {
+    for (let k = 100 - i - j; k >= 0; k--) {
       const thirdScore = ingredients[2].slice(0, -1).map((x) => x * k);
-      calories += ingredients[2][ingredients[2].length - 1] * k;
+      const thirdCalories = ingredients[2][ingredients[2].length - 1] * k;
 
-      for (let l = 100 - i - j - k; l > 0; l--) {
+      for (let l = 100 - i - j - k; l >= 0; l--) {
         const fourthScore = ingredients[3].slice(0, -1).map((x) => x * l);
-        calories += ingredients[3][ingredients[3].length - 1] * l;
+        const fourthCalories = ingredients[3][ingredients[3].length - 1] * l;
+
+        const calories =
+          firstCalories + secondCalories + thirdCalories + fourthCalories;
 
         const score = firstScore
           .map(
