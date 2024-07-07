@@ -1,4 +1,8 @@
-export const input = `Weapons:    Cost  Damage  Armor
+export const input = `Hit Points: 100
+Damage: 8
+Armor: 2`;
+
+export const shopItems = `Weapons:    Cost  Damage  Armor
 Dagger        8     4       0
 Shortsword   10     5       0
 Warhammer    25     6       0

@@ -1,4 +1,4 @@
-import { input } from "./input.js";
+import { input, shopItems } from "./input.js";
 
 class Entity {
   hp = 0;
@@ -11,8 +11,14 @@ class Entity {
     this.def = def;
   }
 
-  takeDmg(entity) {
+  takeDmgFrom(entity) {
     this.hp -= Math.max(entity.atk - this.def, 1);
+  }
+}
+
+class Player extends Entity {
+  constructor() {
+    super(100, 0, 0);
   }
 
   equip(weapon, armor, rings) {
@@ -23,6 +29,12 @@ class Entity {
 
     this.atk += weapon.atk + ringStats.atk;
     this.def += armor.def + ringStats.def;
+  }
+}
+
+class Boss extends Entity {
+  constructor() {
+    super(...[...input.matchAll(/\d+/g)].map((x) => parseInt(x[0])));
   }
 }
 
@@ -43,8 +55,8 @@ class Shop {
   armor = [new Item(0, 0, 0)];
   rings = [new Item(0, 0, 0), new Item(0, 0, 0)];
 
-  constructor(input) {
-    const items = input.split("\n");
+  constructor(shopItems) {
+    const items = shopItems.split("\n");
     const weapons = items.slice(1, items.indexOf(""));
     const armor = items.slice(weapons.length + 3, items.lastIndexOf(""));
     const rings = items.slice(items.lastIndexOf("") + 2);
@@ -67,7 +79,7 @@ class Shop {
   }
 }
 
-const shop = new Shop(input);
+const shop = new Shop(shopItems);
 let lowestCost = Infinity;
 let highestCost = -Infinity;
 
@@ -78,14 +90,14 @@ for (const weapon of shop.weapons) {
         const cost =
           weapon.cost + armor.cost + shop.rings[i].cost + shop.rings[j].cost;
 
-        const player = new Entity(100, 0, 0);
-        const boss = new Entity(100, 8, 2);
+        const player = new Player();
+        const boss = new Boss();
 
         player.equip(weapon, armor, [shop.rings[i], shop.rings[j]]);
 
         for (let step = 0; boss.hp > 0 && player.hp > 0; step++) {
-          if (step % 2 === 0) boss.takeDmg(player);
-          else player.takeDmg(boss);
+          if (step % 2 === 0) boss.takeDmgFrom(player);
+          else player.takeDmgFrom(boss);
 
           if (boss.hp <= 0) lowestCost = Math.min(lowestCost, cost);
           if (player.hp <= 0) highestCost = Math.max(highestCost, cost);
