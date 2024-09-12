@@ -33,7 +33,6 @@ class MagicMissile {
 
   cast(boss) {
     boss.hp -= 4;
-    // console.log(`Player casts ${this.constructor.name}, dealing 4 damage.`);
   }
 }
 
@@ -43,9 +42,6 @@ class Drain {
   cast(boss, player) {
     boss.hp -= 2;
     player.hp += 2;
-    // console.log(
-    //   `Player casts ${this.constructor.name}, dealing 2 damage, and healing 2 hit points.`
-    // );
   }
 }
 
@@ -71,11 +67,9 @@ class Shield extends EffectSpell {
   cast(_, player) {
     if (this.remainingTurns === 6) {
       player.def += 7;
-      // console.log(`Shield provides 7 armor`);
     }
     this.countTurn();
     if (this.remainingTurns === 0) player.def -= 7;
-    // console.log(`Shield's timer is now ${this.remainingTurns}.`);
   }
 }
 
@@ -87,9 +81,6 @@ class Poison extends EffectSpell {
   cast(boss) {
     boss.hp -= 3;
     this.countTurn();
-    // console.log(
-    //   `Poison deals 3 damage; its timer is now ${this.remainingTurns}.`
-    // );
   }
 }
 
@@ -101,16 +92,13 @@ class Recharge extends EffectSpell {
   cast(_, player) {
     player.mana += 101;
     this.countTurn();
-    // console.log(
-    //   `Recharge provides 101 mana; its timer is now ${this.remainingTurns}.`
-    // );
   }
 }
 
 let leastMana = Infinity;
 
 const castSpell = (spell, boss, player, effects, turn, totalCost, hardMode) => {
-  if (player.mana - spell.cost <= 0) return;
+  if (spell.cost > player.mana) return;
 
   const newBoss = new Boss(boss.hp, boss.atk);
   const newPlayer = new Player(player.hp, player.def, player.mana - spell.cost);
@@ -143,10 +131,13 @@ const castEffect = (
 ) => {
   if (player.mana - spell.cost <= 0) return;
 
-  if (effects.some((x) => x.constructor.name === spell.constructor.name))
+  if (
+    effects.some(
+      (x) =>
+        x.constructor.name === spell.constructor.name && x.remainingTurns > 0
+    )
+  )
     return;
-
-  // console.log(`Player casts ${spell.constructor.name}.`);
 
   const newBoss = new Boss(boss.hp, boss.atk);
   const newPlayer = new Player(player.hp, player.def, player.mana - spell.cost);
@@ -167,8 +158,6 @@ const castEffect = (
 };
 
 const bossTurn = (boss, player, effects, turn, totalCost, hardMode) => {
-  // console.log(`Boss attacks for ${Math.max(boss.atk - player.def, 1)} damage.`);
-
   battle(
     new Player(
       player.hp - Math.max(boss.atk - player.def, 1),
@@ -188,26 +177,22 @@ const bossTurn = (boss, player, effects, turn, totalCost, hardMode) => {
 };
 
 const battle = (
-  prevPlayer,
+  player,
   boss,
   effects = [],
   turn = 0,
   totalCost = 0,
   hardMode = false
 ) => {
-  // console.log(`\n-- ${turn % 2 !== 0 ? "Boss" : "Player"} turn ${turn} --`);
-  // console.log(
-  //   `- Player has ${player.hp} hit points, ${player.def} armor, ${player.mana} mana`
-  // );
-  // console.log(`- Boss has ${boss.hp} hit points`);
-  const player = new Player(prevPlayer.hp, prevPlayer.def, prevPlayer.mana);
+  if (totalCost >= leastMana) return;
+
   if (hardMode && turn % 2 === 0) {
     player.hp--;
   }
 
   if (player.hp <= 0) return;
 
-  const remainingEffects = effects.filter((x) => x.remainingTurns);
+  let remainingEffects = effects.filter((x) => x.remainingTurns);
   remainingEffects.forEach((x) => x.cast(boss, player));
 
   if (boss.hp <= 0) {
