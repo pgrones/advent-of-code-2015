@@ -1,17 +1,60 @@
-const input = 33_100_000;
+const input = 33100000;
 
-// This solution is dumb
-// we probably need some kind of reverse lcm
-for (let i = 700_000; ; i++) {
-  let presents = 10;
-  const isUneven = i % 2 !== 0;
+console.time();
 
-  for (let j = i; j > 1; j -= isUneven ? 2 : 1) {
-    if (i % j === 0) presents += j * 10;
+let houseNumber = 1;
+
+while (true) {
+  const divisors = new Set();
+
+  for (let i = 1; i <= Math.sqrt(houseNumber); i++) {
+    if (houseNumber % i == 0) {
+      divisors.add(i);
+      divisors.add(houseNumber / i);
+    }
   }
 
-  if (presents >= input) {
-    console.log(i);
-    break;
-  }
+  if ([...divisors].reduce((a, b) => a + b, 0) * 10 >= input) break;
+
+  houseNumber++;
 }
+
+console.log(houseNumber);
+console.timeLog();
+
+// -----PART 2---------------------------------------
+
+const elvesByHouses = new Map();
+houseNumber = 1;
+
+while (true) {
+  const divisors = new Set();
+
+  for (let i = 1; i <= Math.sqrt(houseNumber); i++) {
+    if (houseNumber % i == 0) {
+      const pairedDivisor = houseNumber / i;
+
+      if (!divisors.has(i)) {
+        const houses = (elvesByHouses.get(i) ?? 0) + 1;
+        elvesByHouses.set(i, houses);
+
+        if (houses <= 50) divisors.add(i);
+      }
+
+      if (pairedDivisor !== i && !divisors.has(pairedDivisor)) {
+        const houses = (elvesByHouses.get(pairedDivisor) ?? 0) + 1;
+        elvesByHouses.set(pairedDivisor, houses);
+
+        if (houses <= 50) divisors.add(pairedDivisor);
+      }
+    }
+  }
+
+  if ([...divisors].reduce((a, b) => a + b, 0) * 11 >= input) break;
+
+  houseNumber++;
+}
+
+console.log(houseNumber);
+
+console.timeEnd();
