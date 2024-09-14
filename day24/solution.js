@@ -1,84 +1,125 @@
 import { input } from "./input.js";
 
-const combinationsOfNElements = (
-  presents,
-  n,
-  data = new Array(n),
-  start = 0,
-  end = presents.length - 1,
-  index = 0,
-  result = []
-) => {
-  if (index == n) {
-    result.push(data.slice(0, n));
+const presents = input.split("\n").map((x) => parseInt(x));
+
+const getCombinations = (presents, n) => {
+  const index = [];
+  const max = presents.length;
+
+  for (let j = 0; j < n; j++) index[j] = j;
+  index[n] = max;
+
+  let ok = true;
+  const combinations = [];
+
+  while (ok) {
+    const combination = [];
+    for (let j = 0; j < n; j++) combination[j] = presents[index[j]];
+    combinations.push(combination);
+
+    ok = false;
+
+    for (let j = n; j > 0; j--) {
+      if (index[j - 1] < index[j] - 1) {
+        index[j - 1]++;
+        for (let k = j; k < n; k++) index[k] = index[k - 1] + 1;
+        ok = true;
+        break;
+      }
+    }
   }
 
-  for (let i = start; i <= end && end - i + 1 >= n - index; i++) {
-    data[index] = presents[i];
-    combinationsOfNElements(presents, n, data, i + 1, end, index + 1, result);
-  }
-
-  return result;
+  return combinations;
 };
 
-const presents = input.split("\n").map((x) => parseInt(x));
-const results = new Set();
+const getWeight = (group) => group.reduce((prev, curr) => prev + curr, 0);
+const getEntanglement = (group) => group.reduce((prev, curr) => prev * curr);
+const getRemaining = (all, group) => all.filter((x) => !group.includes(x));
 
-for (let group1Index = 1; group1Index < presents.length - 2; group1Index++) {
-  const group1Combinations = combinationsOfNElements(presents, group1Index);
+// ----------------PART1-----------------------------
 
-  if (
-    [...results].map((x) => x.split(",").length).some((x) => x === group1Index)
-  )
-    continue;
+let entanglement = Infinity;
 
-  for (const group1Combination of group1Combinations) {
-    for (
-      let group2Index = 1;
-      group2Index < presents.length - group1Index;
-      group2Index++
-    ) {
-      const group2Combinations = combinationsOfNElements(
-        presents.filter((x) => !group1Combination.includes(x)),
-        group2Index
+for (let i = 1; i < presents.length; i++) {
+  const firstGroups = getCombinations(presents, i);
+
+  for (const group of firstGroups) {
+    const weight = getWeight(group);
+    const remaining = getRemaining(presents, group);
+    const remainingWeight = getWeight(remaining);
+
+    if (weight * 2 !== remainingWeight) continue;
+
+    for (let j = 1; j < remaining.length; j++) {
+      const secondGroups = getCombinations(remaining, j).filter(
+        (x) => getWeight(x) === weight
       );
 
-      for (const group2Combination of group2Combinations) {
-        for (
-          let group3Index = presents.length - group2Index - group1Index;
-          group3Index < presents.length;
-          group3Index++
-        ) {
-          const group3Combinations = combinationsOfNElements(
-            presents.filter(
-              (x) =>
-                !group1Combination.includes(x) && !group2Combination.includes(x)
-            ),
-            group3Index
+      if (!secondGroups.length) continue;
+
+      for (const secondGroup of secondGroups) {
+        const thirdGroup = getRemaining(remaining, secondGroup);
+
+        if (!thirdGroup.length || getWeight(thirdGroup) !== weight) continue;
+
+        entanglement = Math.min(entanglement, getEntanglement(group));
+      }
+    }
+  }
+
+  if (entanglement !== Infinity) break;
+}
+
+console.log(entanglement);
+
+// ----------------PART2-----------------------------
+
+entanglement = Infinity;
+
+for (let i = 1; i < presents.length; i++) {
+  const firstGroups = getCombinations(presents, i);
+
+  for (const group of firstGroups) {
+    const weight = getWeight(group);
+    let remaining = getRemaining(presents, group);
+    let remainingWeight = getWeight(remaining);
+
+    if (weight * 3 !== remainingWeight) continue;
+
+    for (let j = 1; j < remaining.length; j++) {
+      const secondGroups = getCombinations(remaining, j).filter(
+        (x) => getWeight(x) === weight
+      );
+
+      if (!secondGroups.length) continue;
+
+      for (const secondGroup of secondGroups) {
+        remaining = getRemaining(remaining, secondGroup);
+        remainingWeight = getWeight(remaining);
+
+        if (weight * 2 !== remainingWeight) continue;
+
+        for (let k = 1; k < remaining.length; k++) {
+          const thirdGroups = getCombinations(remaining, k).filter(
+            (x) => getWeight(x) === weight
           );
 
-          for (const group3Combination of group3Combinations) {
-            const lengths = [
-              group1Combination.reduce((prev, curr) => prev + curr),
-              group2Combination.reduce((prev, curr) => prev + curr),
-              group3Combination.reduce((prev, curr) => prev + curr),
-            ];
+          if (!thirdGroups.length) continue;
 
-            if (lengths[0] === lengths[1] && lengths[0] === lengths[2]) {
-              results.add(group1Combination.toSorted().toString());
-            }
+          for (const thirdGroup of thirdGroups) {
+            const fourthGroup = getRemaining(remaining, thirdGroup);
+
+            if (!fourthGroup.length || getWeight(fourthGroup) !== weight)
+              continue;
+
+            entanglement = Math.min(entanglement, getEntanglement(group));
           }
         }
       }
     }
   }
+
+  if (entanglement !== Infinity) break;
 }
 
-console.log(
-  [...results]
-    .map((x) => x.split(","))
-    .toSorted((a, b) => a.length - b.length)
-    .filter((x, _, arr) => x.length === arr[0].length)
-    .map((x) => x.reduce((prev, curr) => prev * curr))
-    .toSorted()[0]
-);
+console.log(entanglement);
